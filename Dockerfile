@@ -1,5 +1,5 @@
 # Use the official Python image from the Docker Hub
-FROM python:3.10-slim
+FROM mcr.microsoft.com/playwright/python:v1.49.1-noble
 
 # Set the working directory in the container
 WORKDIR /app
