@@ -6,12 +6,16 @@ import logging
 import schedule
 import time
 
+EMAIL = os.getenv("EMAIL")
+PASSWORD = os.getenv("PASSWORD")
+
+PUSHOVER_USER_KEY = os.getenv("PUSHOVER_USER_KEY")
+PUSHOVER_API_TOKEN = os.getenv("PUSHOVER_API_TOKEN")
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 LOGIN_URL = "https://urbansportsclub.com/de/login"
-EMAIL = os.getenv("EMAIL")
-PASSWORD = os.getenv("PASSWORD")
 STORAGE_STATE = "storage_state.json"
 
 VENUE_URL = "https://urbansportsclub.com/de/venues/"
@@ -22,19 +26,16 @@ VENUE_URLS = {
     "Beat81 - Sülz": "beat81-sulz-indoor-workout-1",
     "Rocycle": "rocycle-koln-friesenplatz",
 }
-date_14_days_ahead = (datetime.now() + timedelta(days=13)).strftime("%Y-%m-%d")
 
-PUSHOVER_USER_KEY = os.getenv("PUSHOVER_USER_KEY")
-PUSHOVER_API_TOKEN = os.getenv("PUSHOVER_API_TOKEN")
-
-def send_pushover_message(title, message):
+def send_pushover_message(title, message, date14ahead=(datetime.now() + timedelta(days=13)).strftime("%Y-%m-%d")):
+    full_message = f"Checking for date {date14ahead}\n\n{message}"
     logging.info(f"Sending Pushover message with title: {title}")
     url = "https://api.pushover.net/1/messages.json"
     data = {
         "token": PUSHOVER_API_TOKEN,
         "user": PUSHOVER_USER_KEY,
         "title": title,
-        "message": message
+        "message": full_message
     }
     response = requests.post(url, data=data)
     if response.status_code == 200:
@@ -65,6 +66,7 @@ def is_session_valid(page):
 
 def check_new_courses():
     logging.info("Starting to check new courses")
+    date_14_days_ahead = (datetime.now() + timedelta(days=13)).strftime("%Y-%m-%d")
     with sync_playwright() as p:
         try:
             browser = p.chromium.launch(headless=True)
@@ -93,14 +95,17 @@ def check_new_courses():
 
                 if results:
                     message = "\n\n".join(results)
-                    send_pushover_message(venue_name, message)
+                    send_pushover_message(venue_name, message, date_14_days_ahead)
         except PlaywrightError as e:
             logging.error(f"An error occurred: {e}")
         finally:
             browser.close()
 
 if __name__ == "__main__":
-    schedule.every().day.at("03:00").do(check_new_courses)
+    # Execute check_new_courses on startup
+    check_new_courses()
+
+    schedule.every().day.at("02:00").do(check_new_courses)
     while True:
         logging.info(f"Checking time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         schedule.run_pending()
