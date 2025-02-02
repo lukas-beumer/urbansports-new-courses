@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - '*'
 
 jobs:
   build:
@@ -23,9 +25,18 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.PUSH_TOKEN }}
 
-    - name: Build and push Docker image
+    - name: Build and push Docker image with latest tag
+      if: github.ref == 'refs/heads/main'
       uses: docker/build-push-action@v4
       with:
         context: .
         push: true
         tags: ghcr.io/${{ github.repository_owner }}/urbansports-new-courses:latest
+
+    - name: Build and push Docker image with tag name
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: ghcr.io/${{ github.repository_owner }}/urbansports-new-courses:${{ github.ref_name }}
