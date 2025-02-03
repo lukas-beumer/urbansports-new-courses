@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  urban-sports-courses:
+    image: ghcr.io/lukas-beumer/urbansports-new-courses:latest
+    container_name: urban-sports-courses
+    restart: "no"
+    command: python main.py
+    environment:
+      - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+      - EMAIL=
+      - PASSWORD=
+      - PUSHOVER_USER_KEY=
+      - PUSHOVER_API_TOKEN=
+    networks:
+      - default
+    privileged: false

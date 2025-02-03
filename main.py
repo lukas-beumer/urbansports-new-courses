@@ -100,7 +100,7 @@ def check_new_courses():
 
 if __name__ == "__main__":
     check_new_courses()
-    schedule.every().day.at("02:00").do(check_new_courses)
+    schedule.every().day.at("06:00").do(check_new_courses)
     while True:
         logging.info(f"Checking time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         schedule.run_pending()
