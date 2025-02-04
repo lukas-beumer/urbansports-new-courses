@@ -24,8 +24,9 @@ VENUE_URLS = {
     "Rocycle": "rocycle-koln-friesenplatz",
 }
 
-def send_pushover_message(title, message, date14ahead=(datetime.now() + timedelta(days=13)).strftime("%A, %d.%m.%Y")):
-    full_message = f"Courses for <b>{date14ahead}</b>\n\n{message}"
+def send_pushover_message(title, message, date_14_days_ahead):
+    formatted_date = datetime.strptime(date_14_days_ahead, "%Y-%m-%d").strftime("%A, %d.%m.%Y")
+    full_message = f"Courses for <b>{formatted_date}</b>\n\n{message}"
     logging.info(f"Sending Pushover message with title: {title}")
     response = requests.post("https://api.pushover.net/1/messages.json", data={
         "token": PUSHOVER_API_TOKEN,
@@ -92,7 +93,7 @@ def check_new_courses():
                             logging.info(f"Found course: {results[-1]}")
 
                 if results:
-                    send_pushover_message(venue_name, "\n".join(results))
+                    send_pushover_message(venue_name, "\n".join(results), date_14_days_ahead)
         except PlaywrightError as e:
             logging.error(f"An error occurred: {e}")
         finally:
@@ -100,7 +101,7 @@ def check_new_courses():
 
 if __name__ == "__main__":
     check_new_courses()
-    schedule.every().day.at("06:00").do(check_new_courses)
+    schedule.every().day.at("05:30").do(check_new_courses)
     while True:
         logging.info(f"Checking time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         schedule.run_pending()
